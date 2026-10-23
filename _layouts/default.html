@@ -1,0 +1,1781 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="pangolim">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1c1c1a">
+
+  <!-- Aplica o tema salvo antes de a página aparecer -->
+  <script>
+    try {
+      var temasValidos = [
+        "pangolim",
+        "pangolim-dark"
+      ];
+
+      var temaSalvo = localStorage.getItem("theme");
+
+      if (temasValidos.includes(temaSalvo)) {
+        document.documentElement.dataset.theme = temaSalvo;
+      } else {
+        document.documentElement.dataset.theme = "pangolim";
+        localStorage.setItem("theme", "pangolim");
+      }
+
+    } catch (e) {
+      document.documentElement.dataset.theme = "pangolim";
+    }
+  </script>
+  
+  <meta
+    name="description"
+    content="{{ page.description | default: site.description | escape }}"
+  >
+  <meta
+    property="og:title"
+    content="{% if page.title %}{{ page.title | escape }} · {% endif %}{{ site.title | escape }}"
+  >
+  <meta
+    property="og:description"
+    content="{{ page.description | default: site.description | escape }}"
+  >
+  <meta property="og:type" content="website">
+  {% if site.url and site.url != '' %}
+  <link rel="canonical" href="{{ page.url | absolute_url | escape }}">
+  <meta property="og:url" content="{{ page.url | absolute_url | escape }}">
+  {% endif %}
+
+  <title>
+    {% if page.title %}{{ page.title }} · {% endif %}Pangolim
+  </title>
+
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="{{ '/images/favicon.svg' | relative_url }}"
+  >
+
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="64x64"
+    href="{{ '/images/favicon.png' | relative_url }}"
+  >
+
+  <!-- Carregue as regras dos temas antes do CSS geral -->
+  <link
+    rel="stylesheet"
+    href="{{ '/assets/css/themes.css' | relative_url }}"
+  >
+  <link
+    rel="stylesheet"
+    href="{{ '/assets/css/style.css' | relative_url }}"
+  >
+</head>
+
+<body>
+
+  <script>
+    // Estado móvel antes da primeira pintura, evitando sobrepor o artigo ao carregar.
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      document.body.classList.add('sidebar-collapsed');
+    }
+  </script>
+
+  <noscript>
+    <style>
+      .sidebar { position: static; width: auto; max-width: none; }
+      .page-shell { margin-left: 0; }
+      .sidebar-collapse, .sidebar-search { display: none; }
+    </style>
+  </noscript>
+
+  <a class="skip-link" href="#conteudo">
+    Ir para o conteúdo
+  </a>
+
+  <aside class="sidebar" id="sidebar">
+
+    <!-- =====================================================
+         Cabeçalho da sidebar
+         ===================================================== -->
+
+    <div class="sidebar-top">
+
+      <!-- Marca -->
+
+      <a
+        class="brand"
+        href="{{ '/' | relative_url }}"
+        aria-label="Página inicial do Pangolim"
+      >
+        {% include logo.html class="brand-icon" %}
+      </a>
+
+      <!-- Busca -->
+
+      <div class="sidebar-search">
+
+        <svg
+          class="sidebar-search-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-4-4"></path>
+        </svg>
+
+        <input
+          type="search"
+          id="sidebarSearchInput"
+          placeholder="Pesquisar"
+          aria-label="Pesquisar"
+          autocomplete="off"
+        >
+
+      </div>
+
+      <!-- Botão recolher -->
+
+      <button
+        class="sidebar-collapse"
+        id="sidebarCollapse"
+        type="button"
+        aria-label="Minimizar barra lateral"
+        aria-expanded="true"
+        aria-controls="sidebarMenu"
+        title="Minimizar barra lateral"
+      >
+        <span aria-hidden="true">‹</span>
+      </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         Dock de ícones
+         ===================================================== -->
+
+    <nav class="sidebar-dock" aria-label="Seções (atalhos)">
+
+      <a
+        class="dock-item"
+        href="{{ 'devops/' | relative_url }}"
+        data-label="DevOps"
+        aria-label="DevOps"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'programacao/' | relative_url }}"
+        data-label="Programação"
+        aria-label="Programação"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'linux/index.html' | relative_url }}"
+        data-label="Linux"
+        aria-label="Linux"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="4 17 10 11 4 5"/>
+          <line x1="12" y1="19" x2="20" y2="19"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'redes/index.html' | relative_url }}"
+        data-label="Redes"
+        aria-label="Redes"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="16" y="16" width="6" height="6" rx="1"/>
+          <rect x="2" y="16" width="6" height="6" rx="1"/>
+          <rect x="9" y="2" width="6" height="6" rx="1"/>
+          <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/>
+          <path d="M12 12V8"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'squid/index.html' | relative_url }}"
+        data-label="Squid"
+        aria-label="Squid"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M16 3h5v5"/>
+          <path d="M4 20 21 3"/>
+          <path d="M21 16v5h-5"/>
+          <path d="m15 15 6 6"/>
+          <path d="m4 4 5 5"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'monitoramento/index.html' | relative_url }}"
+        data-label="Monitoramento"
+        aria-label="Monitoramento"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'nutanix/index.html' | relative_url }}"
+        data-label="Nutanix"
+        aria-label="Nutanix"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="2" y="2" width="20" height="8" rx="2"/>
+          <rect x="2" y="14" width="20" height="8" rx="2"/>
+          <line x1="6" y1="6" x2="6.01" y2="6"/>
+          <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'vmware/index.html' | relative_url }}"
+        data-label="VMware"
+        aria-label="VMware"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'watchguard/index.html' | relative_url }}"
+        data-label="WatchGuard"
+        aria-label="WatchGuard"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'windows/index.html' | relative_url }}"
+        data-label="Windows"
+        aria-label="Windows"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="3" width="8" height="8" rx="1"/>
+          <rect x="13" y="3" width="8" height="8" rx="1"/>
+          <rect x="3" y="13" width="8" height="8" rx="1"/>
+          <rect x="13" y="13" width="8" height="8" rx="1"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item"
+        href="{{ 'troubleshooting/index.html' | relative_url }}"
+        data-label="Troubleshooting"
+        aria-label="Troubleshooting"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </a>
+
+      <a
+        class="dock-item dock-github dock-github-bottom"
+        href="https://github.com/Portal-Pangolim/portal-pangolim.github.io"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-label="GitHub"
+        aria-label="Abrir projeto Pangolim no GitHub"
+      >
+        <svg
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M8 0C3.58 0 0 3.64 0 8.13c0 3.59 2.29 6.64 5.47 7.72.4.08.55-.18.55-.4 0-.2-.01-.85-.01-1.54-2.01.38-2.53-.5-2.69-.96-.09-.24-.48-.96-.82-1.15-.28-.15-.68-.53-.01-.54.63-.01 1.08.59 1.23.83.72 1.23 1.87.88 2.33.67.07-.53.28-.88.51-1.08-1.78-.21-3.64-.92-3.64-4.08 0-.9.32-1.64.84-2.22-.08-.21-.37-1.06.08-2.21 0 0 .68-.22 2.2.85A7.49 7.49 0 0 1 8 4.79c.68 0 1.36.09 2 .27 1.52-1.07 2.2-.85 2.2-.85.45 1.15.16 2 .08 2.21.52.58.84 1.31.84 2.22 0 3.17-1.87 3.87-3.65 4.08.29.25.54.72.54 1.46 0 1.06-.01 1.91-.01 2.18 0 .22.15.48.55.4A8.13 8.13 0 0 0 16 8.13C16 3.64 12.42 0 8 0Z"></path>
+        </svg>
+      </a>
+
+    </nav>
+
+
+    <!-- =====================================================
+         Menu
+         ===================================================== -->
+
+    <p id="searchStatus" role="status" class="visually-hidden"></p>
+    <nav id="sidebarMenu" class="sidebar-menu" aria-label="Navegação principal">
+
+      <!-- DevOps -->
+
+      <details>
+
+        <summary>
+          <span>DevOps</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'devops/' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Git</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'devops/git/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/git/guia-pratico.html' | relative_url }}">
+                    Guia prático
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/git/git-branch-para-main.html' | relative_url }}">
+                    Branch e publicação na main
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/git/git-clone-branch-pull-request.html' | relative_url }}">
+                    Clone, Branch, Pull Request e Merge
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/git/atualizando-projeto-git.html' | relative_url }}">
+                    Atualizando projeto Git
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Docker</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'devops/docker/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/docker-image.html' | relative_url }}">
+                    Imagens
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/docker-container.html' | relative_url }}">
+                    Containers
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/docker-compose.html' | relative_url }}">
+                    Docker Compose
+                   (planejado) </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/docker-network.html' | relative_url }}">
+                    Networks
+                   (planejado) </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/docker-volume.html' | relative_url }}">
+                    Volumes
+                   (planejado) </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/dockerfile.html' | relative_url }}">
+                    Dockerfile
+                   (planejado) </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/docker-registry.html' | relative_url }}">
+                    Registry
+                   (planejado) </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/docker/docker-troubleshooting.html' | relative_url }}">
+                    Troubleshooting
+                   (planejado) </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Kubernetes</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/kubeconfig.html' | relative_url }}">
+                    KUBECONFIG
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/kubectl.html' | relative_url }}">
+                    Kubectl
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/instalacao-cluster-rocky-containerd-calico.html' | relative_url }}">
+                    Instalação do cluster (Rocky, containerd, Calico)
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/tutorial-kubernetes-rocky-linux.html' | relative_url }}">
+                    Kubernetes 1.31 (histórico)
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/pods.html' | relative_url }}">
+                    Pods
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/deployments.html' | relative_url }}">
+                    Deployments
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/services.html' | relative_url }}">
+                    Services
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/ingress.html' | relative_url }}">
+                    Ingress
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/kubernetes/troubleshooting.html' | relative_url }}">
+                    Troubleshooting
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>CI/CD</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'devops/cicd/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/cicd/fundamentos-cicd.html' | relative_url }}">
+                    Fundamentos de CI/CD
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Ansible</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'devops/ansible/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/ansible/inventarios.html' | relative_url }}">
+                    Inventários
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/ansible/modulos.html' | relative_url }}">
+                    Módulos
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'devops/ansible/playbooks.html' | relative_url }}">
+                    Playbooks
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Programação -->
+
+      <details>
+
+        <summary>
+          <span>Programação</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'programacao/' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>HTML</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'programacao/html/' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/html/guia-de-estudo.html' | relative_url }}">
+                    Guia de Estudo
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>CSS</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'programacao/css/' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/css/guia-de-estudo.html' | relative_url }}">
+                    Guia de Estudo
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>JavaScript</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'programacao/javascript/' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/javascript/guia-de-estudo.html' | relative_url }}">
+                    Guia de Estudo
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Markdown</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'programacao/markdown/' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/markdown/markdown.html' | relative_url }}">
+                    Guia Completo
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/markdown/markdown-bloco-de-codigos.html' | relative_url }}">
+                    Blocos de Código
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/markdown/tabelas.html' | relative_url }}">
+                    Tabelas
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Jekyll</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'programacao/jekyll/' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/jekyll/jekyll.html' | relative_url }}">
+                    Guia Completo
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>COBOL</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/#trilha-de-estudo' | relative_url }}">
+                    Trilha de Estudo
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/fundamentos.html' | relative_url }}">
+                    Fundamentos
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/gnucobol.html' | relative_url }}">
+                    GnuCOBOL
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/programacao.html' | relative_url }}">
+                    Programação
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/estruturas-dados.html' | relative_url }}">
+                    Estruturas de Dados
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/arquivos.html' | relative_url }}">
+                    Arquivos
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/modularizacao.html' | relative_url }}">
+                    Modularização
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/bancos-de-dados.html' | relative_url }}">
+                    Bancos de Dados
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/mainframe.html' | relative_url }}">
+                    Mainframe
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/jcl.html' | relative_url }}">
+                    JCL
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/cics.html' | relative_url }}">
+                    CICS
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'programacao/cobol/exercicios.html' | relative_url }}">
+                    Exercícios
+                  </a>
+                </li>
+
+                <li>
+                  <span class="planned">Materiais de Estudo
+                   (planejado)</span>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Linux -->
+
+      <details>
+
+        <summary>
+          <span>Linux</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'linux/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Armazenamento</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'linux/armazenamento/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'linux/armazenamento/expandir-lvm.html' | relative_url }}">
+                    Expandir LVM
+                  </a>
+                </li>
+
+                <li>
+                  <details>
+
+                    <summary>
+                      <span>NFS</span>
+                    </summary>
+
+                    <ul>
+
+                      <li>
+                        <a href="{{ 'linux/armazenamento/nfs/index.html' | relative_url }}">
+                          Visão Geral
+                        </a>
+                      </li>
+
+                      <li>
+                        <a href="{{ 'linux/armazenamento/nfs/cliente-nfs-rocky-linux-9.html' | relative_url }}">
+                          Cliente NFS Rocky Linux 9
+                        </a>
+                      </li>
+
+                      <li>
+                        <a href="{{ 'linux/armazenamento/nfs/cliente-nfs-windows-10-11.html' | relative_url }}">
+                          Cliente NFS Windows 10/11
+                        </a>
+                      </li>
+
+                      <li>
+                        <a href="{{ 'linux/armazenamento/nfs/servidor-nfs-rocky-linux-9.html' | relative_url }}">
+                          Servidor NFS Rocky Linux 9
+                        </a>
+                      </li>
+
+                      <li>
+                        <a href="{{ 'linux/armazenamento/nfs/troubleshooting-nfs.html' | relative_url }}">
+                          Troubleshooting NFS
+                        </a>
+                      </li>
+
+                    </ul>
+
+                  </details>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Redes</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'linux/redes/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'linux/redes/configuracaodns.html' | relative_url }}">
+                    Configuração DNS
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Segurança</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'linux/seguranca/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <details>
+
+                    <summary>
+                      <span>SSL</span>
+                    </summary>
+
+                    <ul>
+
+                      <li>
+                        <a href="{{ 'linux/seguranca/ssl/atualizarSSLwiki.html' | relative_url }}">
+                          Atualizar SSL
+                        </a>
+                      </li>
+
+                      <li>
+                        <a href="{{ 'linux/seguranca/ssl/certificadossl.html' | relative_url }}">
+                          Certificados SSL
+                        </a>
+                      </li>
+
+                    </ul>
+
+                  </details>
+                </li>
+
+                <li>
+                  <details>
+
+                    <summary>
+                      <span>SSH</span>
+                    </summary>
+
+                    <ul>
+
+                      <li>
+                        <a href="{{ 'linux/seguranca/ssh/ssh-acesso-via-nome.html' | relative_url }}">
+                          SSH por nome
+                        </a>
+                      </li>
+
+                      <li>
+                        <a href="{{ 'linux/seguranca/ssh/ssh_key.html' | relative_url }}">
+                          Chaves SSH
+                        </a>
+                      </li>
+
+                    </ul>
+
+                  </details>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Troubleshooting</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'linux/troubleshooting/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Redes -->
+
+      <details>
+
+        <summary>
+          <span>Redes</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'redes/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'redes/portaseprotocolos.html' | relative_url }}">
+              Portas e Protocolos
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'redes/tcpip.html' | relative_url }}">
+              TCP/IP
+            </a>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>DNS</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'redes/dns/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/dns/bindencaminhamento.html' | relative_url }}">
+                    BIND — Encaminhamento
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/dns/bind-encaminhamentodns.html' | relative_url }}">
+                    BIND — Encaminhamento DNS
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Nmap</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'redes/nmap/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/nmap/nmap-comandos.html' | relative_url }}">
+                    Nmap — Comandos
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/nmap/nmap-troubleshooting.html' | relative_url }}">
+                    Nmap — Troubleshooting
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/nmap/nmap-nse.html' | relative_url }}">
+                    Nmap — NSE
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/nmap/nmap-seguranca.html' | relative_url }}">
+                    Nmap — Segurança
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/nmap/exploracao-forca-bruta-evasao.html' | relative_url }}">
+                    Nmap — Exploração de Força Bruta e Evasão
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'redes/nmap/pentest-e-operacoes-ofensivas.html' | relative_url }}">
+                    Nmap — Pentest Autorizado
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Squid -->
+
+      <details>
+
+        <summary>
+          <span>Squid</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'squid/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li class="sidebar-subsection">
+
+            <details>
+
+              <summary>
+                <span>Fundamentos</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'squid/fundamentos/01-introducao-ao-squid.html' | relative_url }}">
+                    01 — Introdução ao Squid
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'squid/fundamentos/02-instalacao-e-configuracao.html' | relative_url }}">
+                    02 — Instalação e Configuração
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'squid/fundamentos/03-acls-e-regras-de-acesso.html' | relative_url }}">
+                    03 — ACLs e Regras de Acesso
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'squid/fundamentos/04-gerenciamento-de-urls.html' | relative_url }}">
+                    04 — Gerenciamento de URLs
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'squid/fundamentos/05-automacao-do-gerenciamento-de-urls.html' | relative_url }}">
+                    05 — Automação do Gerenciamento de URLs
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'squid/fundamentos/06-autenticacao.html' | relative_url }}">
+                    06 — Autenticação
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'squid/fundamentos/07-logs-e-diagnosticos.html' | relative_url }}">
+                    07 — Logs e Diagnóstico
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Monitoramento -->
+
+      <details>
+
+        <summary>
+          <span>Monitoramento</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'monitoramento/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'monitoramento/grafana.html' | relative_url }}">
+              Grafana
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'monitoramento/instalacao-zabbix-server.html' | relative_url }}">
+              Instalação do Zabbix Server
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'monitoramento/instalacao-zabbix-agent-linux.html' | relative_url }}">
+              Zabbix Agent no Linux
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'monitoramento/instalacao-zabbix-agent-windows.html' | relative_url }}">
+              Zabbix Agent no Windows
+            </a>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Nutanix -->
+
+      <details>
+
+        <summary>
+          <span>Nutanix</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'nutanix/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Fundamentos</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/01-introducao-ao-nutanix.html' | relative_url }}">
+                    01 — Introdução ao Nutanix
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/02-arquitetura-hiperconvergente.html' | relative_url }}">
+                    02 — Arquitetura Hiperconvergente
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/03-prism-element-e-prism-central.html' | relative_url }}">
+                    03 — Prism Element e Prism Central
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/04-ahv-aos-e-cvm.html' | relative_url }}">
+                    04 — AHV, AOS e CVM
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/05-storage-pool-container-e-vdisk.html' | relative_url }}">
+                    05 — Storage Pool, Container e vDisk
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/06-resiliencia-rf2-rf3-e-localidade.html' | relative_url }}">
+                    06 — Resiliência, RF2, RF3 e Localidade
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/07-nutanix-files-e-fsvm.html' | relative_url }}">
+                    07 — Nutanix Files e FSVM
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/08-smb-nfs-e-active-directory.html' | relative_url }}">
+                    08 — SMB, NFS e Active Directory
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/fundamentos/09-fluxos-e-diagnostico-inicial.html' | relative_url }}">
+                    09 — Fluxos e Diagnóstico Inicial
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Volumes</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'nutanix/volumes/configurando-volumes-nutanix.html' | relative_url }}">
+                    Configurando Volumes Nutanix
+                  </a>
+                </li>
+
+                <li>
+                  <a href="{{ 'nutanix/volumes/questionario-volumes-nutanix.html' | relative_url }}">
+                    Questionário de Volumes Nutanix
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Data Lens</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'nutanix/data-lens/index.html' | relative_url }}">
+                    Visão Geral
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+          <li>
+            <details>
+
+              <summary>
+                <span>Clones</span>
+              </summary>
+
+              <ul>
+
+                <li>
+                  <a href="{{ 'nutanix/clone/configuracao-vm-apos-clone.html' | relative_url }}">
+                    Configurando Clones Nutanix
+                  </a>
+                </li>
+
+              </ul>
+
+            </details>
+          </li>
+
+        </ul>
+
+      </details>
+
+      <!-- VMware -->
+
+      <details>
+
+        <summary>
+          <span>VMware</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'vmware/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'vmware/instalacao-esxi-7-dell-r830-idrac.html' | relative_url }}">
+              Instalação ESXi 7 — Dell R830/iDRAC
+            </a>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- WatchGuard -->
+
+      <details>
+
+        <summary>
+          <span>WatchGuard</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'watchguard/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'watchguard/watchguardndrcollectionagent.html' | relative_url }}">
+              NDR Collection Agent
+            </a>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Windows -->
+
+      <details>
+
+        <summary>
+          <span>Windows</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'windows/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'windows/activedirectory.html' | relative_url }}">
+              Active Directory
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'windows/instalacao-aplicativos-exe.html' | relative_url }}">
+              Instalação de aplicativos EXE
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'windows/instalacao-via-temp.html' | relative_url }}">
+              Instalação via TEMP
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'windows/windowsproxyparalinux.html' | relative_url }}">
+              Proxy Windows para Linux
+            </a>
+          </li>
+
+        </ul>
+
+      </details>
+
+
+      <!-- Troubleshooting -->
+
+      <details>
+
+        <summary>
+          <span>Troubleshooting</span>
+        </summary>
+
+        <ul>
+
+          <li>
+            <a href="{{ 'troubleshooting/index.html' | relative_url }}">
+              Visão Geral
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'troubleshooting/troubleshooting_utf8_wildfly.html' | relative_url }}">
+              UTF-8 no WildFly
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'troubleshooting/troubleshootingcitsmart.html' | relative_url }}">
+              CitSmart
+            </a>
+          </li>
+
+          <li>
+            <a href="{{ 'troubleshooting/troubleshootingwiki.html' | relative_url }}">
+              Wiki
+            </a>
+          </li>
+
+        </ul>
+
+      </details>
+
+    </nav>
+
+
+    <!-- =====================================================
+         Rodapé da sidebar: seletor de tema + GitHub
+         ===================================================== -->
+
+    <div class="sidebar-footer">
+
+      <a
+        href="https://github.com/Portal-Pangolim/portal-pangolim.github.io"
+        target="_blank"
+        rel="noopener"
+      >
+        Ver no GitHub
+      </a>
+
+<label class="theme-switch">
+
+  <span class="visually-hidden">
+    Tema
+  </span>
+
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.5a5.5 5.5 0 0 0 0-11H12Z"></path>
+
+    <circle cx="7.5" cy="10" r=".8"></circle>
+    <circle cx="9" cy="6.5" r=".8"></circle>
+    <circle cx="14" cy="6.5" r=".8"></circle>
+    <circle cx="17" cy="10" r=".8"></circle>
+  </svg>
+
+  <select id="tema" aria-label="Tema">
+
+    <option value="pangolim">Pangolim</option>
+
+    <option value="pangolim-dark">Pangolim — Dark</option>
+  
+  </select>
+
+</label>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =======================================================
+       Conteúdo
+       ======================================================= -->
+
+  <div class="page-shell">
+
+    <main
+      id="conteudo"
+      tabindex="-1"
+    >
+      {{ content }}
+    </main>
+
+    <footer class="site-footer">
+
+      <span>
+        {% if page.last_reviewed %}Revisado em {{ page.last_reviewed | date: "%d/%m/%Y" }}{% else %}Página gerada em {{ site.time | date: "%d/%m/%Y" }}{% endif %}
+      </span>
+
+    </footer>
+
+  </div>
+
+
+  <!-- =======================================================
+       Seletor de tema
+       ======================================================= -->
+
+<script type="module" src="{{ '/assets/js/portal.mjs' | relative_url }}"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+/* Tema Pangolim */
+
+body {
+    background-color: #0b0f0d;
+    color: #dce5df;
+}
+
+/* Área principal */
+.md-main {
+    background-color: #121813;
+}
+
+/* Área do conteúdo */
+.md-content {
+    background-color: #151b17;
+    border-radius: 12px;
+    padding: 20px;
+    color: #dce5df;
+}
+
+/* Títulos */
+h1, h2, h3 {
+    color: #f5f7f5;
+}
+
+/* Links */
+a {
+    color: #7CCB5E;
+}
+
+a:hover,
+a:focus {
+    color: #9ddc87;
+}
+
+/* Tabelas */
+table {
+    border-radius: 8px;
+    overflow: hidden;
+    background: #121813;
+    border: 1px solid #22312a;
+}
+
+table th,
+table td {
+    border-bottom: 1px solid #22312a;
+}

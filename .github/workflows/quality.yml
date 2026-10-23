@@ -1,0 +1,49 @@
+name: Qualidade do portal
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      BUNDLE_FROZEN: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler: '4.0.21'
+          bundler-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Testes de regressão e sintaxe
+        run: npm test
+      - name: Renderização, links, fragmentos e metadados
+        run: ruby tools/validate.rb --write .tmp/validation-site --report .tmp/validation.json
+      - name: Caminho-base alternativo
+        run: ruby tools/validate.rb --baseurl /portal --write .tmp/validation-baseurl-site --report .tmp/baseurl.json
+      - name: Navegador real com rede externa bloqueada
+        run: npm run test:browser
+      - name: Navegador em caminho-base alternativo
+        env:
+          SITE_DIR: .tmp/validation-baseurl-site
+          TEST_BASEURL: /portal
+          BROWSER_REPORT: .tmp/browser-baseurl-report.json
+        run: npm run test:browser
+      - name: Guardar evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qualidade-${{ matrix.os }}
+          path: .tmp/*.json
+          retention-days: 7

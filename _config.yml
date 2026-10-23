@@ -1,0 +1,23 @@
+title: Portal Pangolim
+description: Portal Pangolim é a base de conhecimento prática para Linux, infraestrutura, DevOps, Kubernetes, redes, monitoramento e troubleshooting.
+
+exclude:
+  - "*.bak"
+  - "*.bkp"
+  - Gemfile
+  - Gemfile.lock
+  - CONTRIBUTING.md
+  - README.md
+  - docs
+  - tools
+  - test
+  - .tmp
+  - node_modules
+  - vendor
+  - package.json
+  - package-lock.json
+url: "https://portal-pangolim.github.io"
+baseurl: ""
+repository: Portal-Pangolim/portal-pangolim.github.io
+plugins:
+  - jekyll-sitemap

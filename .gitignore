@@ -1,0 +1,16 @@
+﻿_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+.bundle/
+
+# Artefatos locais de validação; preservar, nunca publicar.
+.tmp/
+node_modules/
+vendor/
+
+# Logs gerados localmente.
+*.log
+
+# Relatório privado da auditoria editorial; manter no disco, fora do Git.
+/docs/revisao-sanitizacao-editorial.md

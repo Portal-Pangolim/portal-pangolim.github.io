@@ -1,0 +1,29 @@
+# -----------------------------------------------------------------------------
+# Arquivo: .gitattributes
+#
+# Objetivo:
+# Padronizar as quebras de linha (EOL) do repositório para o formato Linux (LF),
+# evitando problemas de compatibilidade entre Windows, Linux e GitHub.
+#
+# Desenvolvimento multiplataforma: manter os arquivos de texto em LF.
+# -----------------------------------------------------------------------------
+
+# Detecta automaticamente arquivos de texto e utiliza LF
+* text=auto eol=lf
+
+# Markdown
+*.md text eol=lf
+
+# Arquivos YAML
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Shell Scripts
+*.sh text eol=lf
+
+# Arquivos de configuração Linux
+*.conf text eol=lf
+*.cfg text eol=lf
+
+# Arquivos de texto
+*.txt text eol=lf
