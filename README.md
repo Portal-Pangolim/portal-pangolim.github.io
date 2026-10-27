@@ -4,8 +4,8 @@ Base pública de conhecimento sobre Linux, DevOps, Kubernetes, redes, segurança
 monitoramento e infraestrutura. Mantido pela organização **Portal-Pangolim**.
 
 * Repositório: https://github.com/Portal-Pangolim/portal-pangolim.github.io
-* Endereço planejado: https://portal-pangolim.github.io/
-* Publicação ainda não configurada nesta migração.
+* Endereço oficial: https://portal-pangolim.github.io/
+* Portal publicado no GitHub Pages.
 
 ## Desenvolvimento local
 
@@ -53,15 +53,15 @@ portal-pangolim.github.io/
   .github/workflows/      qualidade em Linux e Windows
 ```
 
-## Qualidade e publicação futura
+## Qualidade e publicação
 
 O workflow de qualidade executa em Pull Requests ou por acionamento manual, com
-permissões de leitura. Não há workflow de deploy. O repositório privado ainda
-precisa ter a elegibilidade do plano e a configuração do Pages verificadas.
+permissões de leitura. Esse workflow não realiza deploy; o portal está publicado
+no GitHub Pages.
 
-A configuração prepara um site de organização na raiz, com `baseurl: ""`.
-Somente após autorização, validar os workflows remotos e definir a origem de
-publicação. Não enviar `.tmp`, `_site`, dependências instaladas, logs ou backups.
+O portal está publicado como site de organização na raiz, com `baseurl: ""`.
+Alterações na configuração ou na origem de publicação exigem autorização.
+Não enviar `.tmp`, `_site`, dependências instaladas, logs ou backups.
 Conteúdo histórico fora deste novo repositório não é eliminado pela migração.
 
 Para contribuir, consulte [CONTRIBUTING.md](CONTRIBUTING.md) e o
