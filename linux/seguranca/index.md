@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Segurança
-description: "Autenticação por chave SSH e atualização de certificados SSL."
+description: "Integração Linux com Active Directory, autenticação por chave SSH e certificados SSL."
 ---
 
 <h1 class="page-title">
@@ -18,13 +18,24 @@ description: "Autenticação por chave SSH e atualização de certificados SSL."
 
 Segurança reúne os procedimentos de autenticação e de proteção das comunicações em servidores Linux.
 
-Esta seção apresenta a configuração de chaves SSH e a atualização de certificados SSL em aplicações com Docker.
+Esta seção apresenta a integração Linux com Active Directory, a configuração de chaves SSH e a atualização de certificados SSL em aplicações com Docker.
 
 ---
 
 ## Conteúdo
 
 Os tutoriais estão agrupados por tecnologia.
+
+### Active Directory
+
+<div class="wiki-topic-list">
+
+  <a class="wiki-topic" href="{{ 'linux/seguranca/integracao-linux-active-directory.html' | relative_url }}">
+    <span class="wiki-topic-title">Integração Linux com Active Directory</span>
+    <span class="wiki-topic-description">Ingresso no domínio com Realmd, SSSD e Kerberos, validação e recuperação.</span>
+  </a>
+
+</div>
 
 ### SSH
 
