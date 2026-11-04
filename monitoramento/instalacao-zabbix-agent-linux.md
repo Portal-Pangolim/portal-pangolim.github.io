@@ -1,98 +1,94 @@
 ---
 layout: default
-description: "Instalação e configuração do Zabbix Agent no Linux, com verificação do serviço e da comunicação."
+description: "Instalação, configuração e validação do Zabbix Agent 2 no Rocky Linux 9."
 title: Instalação do Zabbix Agent no Linux
 ---
 
 # Instalação do Zabbix Agent no Linux
 {:.no_toc}
 
-Este tutorial instala o Zabbix Agent 2 em um servidor Rocky Linux 9 ou outra distribuição compatível com pacotes RPM.
+Instalação e configuração do **Zabbix Agent 2** no Rocky Linux 9 e distribuições compatíveis.
 
-Pré-requisito: um Zabbix Server em funcionamento. Veja [Instalação do Zabbix Server]({{ 'monitoramento/instalacao-zabbix-server.html' | relative_url }}).
+Pré-requisito: Zabbix Server ou Proxy disponível. Consulte [Instalação do Zabbix Server]({{ 'monitoramento/instalacao-zabbix-server.html' | relative_url }}).
 
 <div class="toc-title">Sumário</div>
-* Sumário:
+* Sumário
 {:toc}
 
 ---
 
-## Adicionar o repositório
+## 1. Instalar o agente
 
-Substitua `7.0` pela versão utilizada pelo seu Zabbix Server, se necessário:
+Exemplo utilizando o repositório Zabbix 7.0 para RHEL 9:
 
 ```bash
 rpm -Uvh https://repo.zabbix.com/zabbix/7.0/rhel/9/x86_64/zabbix-release-latest-7.0.el9.noarch.rpm
 dnf clean all
-```
-
----
-
-## Instalar o agente
-
-```bash
 dnf install -y zabbix-agent2
 ```
 
----
+Utilize a versão do repositório compatível com o ambiente.
 
-## Configurar o agente
+## 2. Configurar o agente
 
-Edite o arquivo de configuração:
+Faça backup e edite a configuração:
 
 ```bash
+cp -a /etc/zabbix/zabbix_agent2.conf /etc/zabbix/zabbix_agent2.conf.bak
 vi /etc/zabbix/zabbix_agent2.conf
 ```
 
-Configure pelo menos os parâmetros abaixo. Use o endereço IP ou DNS do Zabbix Server:
+Configuração para monitoramento passivo:
 
-```text
-Server=IP_DO_ZABBIX_SERVER
-ServerActive=IP_DO_ZABBIX_SERVER
+```ini
+Server=IP_DO_ZABBIX_SERVER_OU_PROXY
+ListenPort=10050
+ServerActive=
 Hostname=nome-do-host-linux
 ```
 
-O valor de `Hostname` deve ser exatamente igual ao nome cadastrado no frontend do Zabbix.
+Para verificações ativas, configure também `ServerActive` e garanta que `Hostname` corresponda ao nome técnico cadastrado no Zabbix.
 
----
+Se a porta 10050 estiver ocupada, utilize outra porta disponível e configure o mesmo valor na interface do host no Zabbix.
 
-## Iniciar e habilitar o serviço
+## 3. Iniciar o serviço
 
 ```bash
 systemctl enable --now zabbix-agent2
-systemctl status zabbix-agent2
+systemctl status zabbix-agent2 --no-pager
 ```
 
----
+## 4. Verificar firewall
 
-## Liberar a porta do agente
+Para monitoramento passivo, permita TCP/10050 a partir do Zabbix Server ou Proxy autorizado.
 
-Para monitoramento passivo, libere a porta TCP `10050`:
+Exemplo com firewalld ativo:
 
 ```bash
-firewall-cmd --permanent --add-port=10050/tcp
+firewall-cmd --permanent \
+  --add-rich-rule='rule family="ipv4" source address="IP_DO_ZABBIX_SERVER_OU_PROXY" port port="10050" protocol="tcp" accept'
+
 firewall-cmd --reload
 ```
 
----
+Caso utilize outra porta, ajuste a regra. Verifique também os firewalls e ACLs da rede.
 
-## Validar a comunicação
+## 5. Validar o agente
 
-No Zabbix Server, teste a porta do agente:
-
-```bash
-nc -zv IP_DO_HOST_LINUX 10050
-```
-
-Verifique também os logs no host monitorado:
+No host Linux:
 
 ```bash
-journalctl -u zabbix-agent2 -n 50 --no-pager
+zabbix_agent2 -t agent.ping
+ss -lntp | grep ':10050'
+journalctl -u zabbix-agent2 -n 20 --no-pager
 ```
 
-No frontend do Zabbix, crie ou abra o host e confirme:
+No Zabbix Server ou Proxy:
 
-- nome do host igual ao parâmetro `Hostname`;
-- interface do tipo Agent apontando para o IP do Linux;
-- template compatível com a versão do agente;
-- status do host como disponível.
+```bash
+zabbix_get -s IP_DO_HOST_LINUX -p 10050 -k agent.ping
+```
+
+**Resultado esperado:** `1`.
+
+No frontend, confirme o IP, a porta da interface Agent, o Server ou Proxy responsável e o template associado ao host.

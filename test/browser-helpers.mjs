@@ -76,17 +76,49 @@ export async function launchBrowser() {
   const profile = path.resolve('.tmp', 'chrome-' + Date.now() + '-' + process.pid);
   mkdirSync(profile, { recursive: true });
   const child = spawn(executable, ['--headless', '--remote-debugging-port=0', '--remote-debugging-address=127.0.0.1', '--user-data-dir=' + profile, '--no-first-run', '--no-default-browser-check', '--disable-background-networking', '--disable-component-update', '--disable-sync', 'about:blank'], { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
-  const endpoint = await new Promise((resolve, reject) => {
-    let output = '';
-    const timer = setTimeout(() => { child.kill(); reject(Error('Chrome não iniciou em 20 segundos')); }, 20000);
-    child.once('error', error => { clearTimeout(timer); reject(error); });
-    child.once('exit', code => { clearTimeout(timer); reject(Error('Chrome encerrou: ' + code)); });
-    child.stderr.on('data', chunk => {
-      output += chunk;
-      const match = output.match(/DevTools listening on (ws:\/\/[^\s]+)/);
-      if (match) { clearTimeout(timer); resolve(match[1]); }
-    });
+const endpoint = await new Promise((resolve, reject) => {
+  let output = '';
+  let settled = false;
+
+  const finish = (error, value) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+
+    if (error) reject(error);
+    else resolve(value);
+  };
+
+  const timer = setTimeout(() => {
+    child.kill();
+    finish(new Error(
+      `Chrome não iniciou em 45 segundos.\n` +
+      `Executável: ${executable}\n` +
+      `Saída do navegador:\n${output.slice(-4000)}`
+    ));
+  }, 45000);
+
+  child.once('error', error => {
+    finish(error);
   });
+
+  child.once('exit', code => {
+    finish(new Error(
+      `Chrome encerrou com código ${code}.\n` +
+      `Saída do navegador:\n${output.slice(-4000)}`
+    ));
+  });
+
+  child.stderr.on('data', chunk => {
+    output += chunk.toString();
+
+    const match = output.match(/DevTools listening on (ws:\/\/[^\s]+)/);
+
+    if (match) {
+      finish(null, match[1]);
+    }
+  });
+});
   const socket = new WebSocket(endpoint);
   await new Promise((resolve, reject) => { socket.addEventListener('open', resolve, { once: true }); socket.addEventListener('error', reject, { once: true }); });
   const cdp = new CDP(socket);
