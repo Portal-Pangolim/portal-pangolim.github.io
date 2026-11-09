@@ -11,7 +11,8 @@
 
 /* =========================================================
    Pangolim
-   Tema claro, neutro e discreto
+   Paleta de controle-financeiro/style.css, :root[data-tema="pangolim"].
+   Dourado para superfícies; marrom para texto e foco com contraste AA.
    ========================================================= */
 
 [data-theme="pangolim"] {
@@ -20,47 +21,61 @@
   /* =========================================================
      Fundos gerais
      ========================================================= */
-  --bg-page: #f5f5f3;
-  --bg-sidebar: #eeeeec;
-  --bg-main: #f8f8f6;
-  --bg-card: #ffffff;
-  --bg-hover: #e8e8e5;
+  --bg-page: #F2D98B;
+  --bg-sidebar: #F8E5AB;
+  --bg-main: #FFF1C6;
+  --bg-card: #FFF1C6;
+  --bg-hover: #F5D98F;
 
   /* =========================================================
      Código e exemplos
      ========================================================= */
-  --bg-code: #eeeeec;
-  --bg-code-header: #e4e4e1;
-  --bg-code-border: #d2d2ce;
+  --bg-code: #F8E5AB;
+  --bg-code-header: #F5D98F;
+  --bg-code-border: #D9BC73;
 
-  --code-text: #333333;
-  --code-muted: #626262;
-  --code-accent: #6b6257;
+  --code-text: #79502C;
+  --code-muted: #79552F;
+  --code-accent: #8A5D15;
+  --syntax-keyword: #A64A35;
+  --syntax-function: #286443;
+  --syntax-string: #4D688C;
+  --syntax-number: #805886;
+  --syntax-comment: #79552F;
+  --syntax-operator: #805886;
+  --syntax-variable: #79502C;
+  --syntax-attribute: #3F6D6F;
 
   /* =========================================================
      Texto geral
      ========================================================= */
-  --text: #555555;
-  --text-strong: #222222;
-  --text-muted: #626262;
+  --text: #79502C;
+  --text-strong: #35240F;
+  --text-muted: #79552F;
 
   /* =========================================================
      Bordas
      ========================================================= */
-  --border: #d5d5d2;
-  --border-soft: #e4e4e1;
+  --border: #D9BC73;
+  --border-soft: #D9BC73;
+  --border-control: #A17A39;
 
   /* =========================================================
      Destaques
      ========================================================= */
-  --accent: #756b5f;
-  --accent-hover: #5f574e;
-  --accent-soft: rgba(117, 107, 95, 0.12);
+  --accent: #79502C;
+  --accent-hover: #35240F;
+  --accent-soft: #F5D98F;
+  --brand-gold: #C89A46;
+  --brand-gold-hover: #BB8C39;
+  --error-text: #A52E35;
+  --error-bg: #FFE5DE;
+  --error-border: #A52E35;
 
   /* =========================================================
      Sombra
      ========================================================= */
-  --shadow: rgba(0, 0, 0, 0.08);
+  --shadow: rgba(121, 80, 44, 0.08);
 }
 
 [data-theme="pangolim-dark"] {
@@ -78,10 +93,16 @@
 
   --border:      #2d2d2d;
   --border-soft: #272727;
+  --border-control: var(--border);
 
   --accent:       #bfbfbf;
   --accent-hover: #d6d6d6;
   --accent-soft:  rgba(191,191,191,.055);
+  --brand-gold: transparent;
+  --brand-gold-hover: var(--bg-hover);
+  --error-text: #ef938a;
+  --error-bg: rgba(220, 90, 80, 0.12);
+  --error-border: rgba(220, 90, 80, 0.35);
 
   --shadow: rgba(0,0,0,.25);
 }

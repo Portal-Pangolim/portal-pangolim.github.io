@@ -3,28 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1c1c1a">
+  <meta name="theme-color" content="#F2D98B">
 
-  <!-- Aplica o tema salvo antes de a página aparecer -->
+  <!-- Resolve a preferência antes do CSS, sem salvar uma escolha automática. -->
   <script>
+    var temaSalvo;
     try {
-      var temasValidos = [
-        "pangolim",
-        "pangolim-dark"
-      ];
-
-      var temaSalvo = localStorage.getItem("theme");
-
-      if (temasValidos.includes(temaSalvo)) {
-        document.documentElement.dataset.theme = temaSalvo;
-      } else {
-        document.documentElement.dataset.theme = "pangolim";
-        localStorage.setItem("theme", "pangolim");
-      }
-
-    } catch (e) {
-      document.documentElement.dataset.theme = "pangolim";
-    }
+      temaSalvo = localStorage.getItem("theme");
+    } catch (e) { /* Preferência do sistema continua disponível. */ }
+    var temaInicial = ["pangolim", "pangolim-dark"].includes(temaSalvo)
+      ? temaSalvo
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? "pangolim-dark" : "pangolim");
+    document.documentElement.dataset.theme = temaInicial;
+    document.querySelector('meta[name="theme-color"]').content = temaInicial === "pangolim-dark" ? "#191919" : "#F2D98B";
   </script>
   
   <meta
@@ -86,7 +77,7 @@
     <style>
       .sidebar { position: static; width: auto; max-width: none; }
       .page-shell { margin-left: 0; }
-      .sidebar-collapse, .sidebar-search { display: none; }
+      .sidebar-collapse, .sidebar-search, .theme-switch { display: none; }
     </style>
   </noscript>
 
@@ -1717,7 +1708,7 @@
 
 
     <!-- =====================================================
-         Rodapé da sidebar: seletor de tema + GitHub
+         Rodapé da sidebar: alternância de tema + GitHub
          ===================================================== -->
 
     <div class="sidebar-footer">
@@ -1730,38 +1721,18 @@
         Ver no GitHub
       </a>
 
-<label class="theme-switch">
-
-  <span class="visually-hidden">
-    Tema
-  </span>
-
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1-2-2 2 2 0 0 1 2-2h1.5a5.5 5.5 0 0 0 0-11H12Z"></path>
-
-    <circle cx="7.5" cy="10" r=".8"></circle>
-    <circle cx="9" cy="6.5" r=".8"></circle>
-    <circle cx="14" cy="6.5" r=".8"></circle>
-    <circle cx="17" cy="10" r=".8"></circle>
-  </svg>
-
-  <select id="tema" aria-label="Tema">
-
-    <option value="pangolim">Pangolim</option>
-
-    <option value="pangolim-dark">Pangolim — Dark</option>
-  
-  </select>
-
-</label>
+      <button class="theme-switch" id="tema" type="button"
+        aria-label="Ativar tema escuro" title="Ativar tema escuro">
+        <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z"></path>
+        </svg>
+        <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"></path>
+        </svg>
+      </button>
 
     </div>
 
@@ -1793,7 +1764,7 @@
 
 
   <!-- =======================================================
-       Seletor de tema
+       Controles locais e alternância de tema
        ======================================================= -->
 
 <script type="module" src="{{ '/assets/js/portal.mjs' | relative_url }}"></script>
