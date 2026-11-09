@@ -6,6 +6,8 @@ import { serve, launchBrowser, intercept } from '../test/browser-helpers.mjs';
 const argument=name=>{const i=process.argv.indexOf(name);return i<0?undefined:process.argv[i+1];};
 const siteDir = argument('--site-dir') || process.env.SITE_DIR || '.tmp/validation-site';
 const baseurl = argument('--baseurl') || process.env.TEST_BASEURL || '';
+const artifactDir = argument('--artifact-dir') || '.tmp';
+fs.mkdirSync(artifactDir,{recursive:true});
 assert.ok(fs.existsSync(path.join(siteDir,'index.html')), 'Renderize primeiro: ruby tools/validate.rb --write .tmp/validation-site');
 const {server,origin} = await serve(siteDir,baseurl);
 let browser;
@@ -29,8 +31,10 @@ try {
  });
  const evaluate=expression=>cdp.evaluate(expression);
  const screenshot=async name=>{
+  // Aguarda as transições para registrar o tema final, sem cores intermediárias.
+  await evaluate('Promise.all(document.getAnimations().map(animation=>animation.finished.catch(()=>{})))');
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png'});
-  fs.writeFileSync(`.tmp/${baseurl?'baseurl':'root'}-${name}.png`,Buffer.from(data,'base64'));
+  fs.writeFileSync(path.join(artifactDir,`${baseurl?'baseurl':'root'}-${name}.png`),Buffer.from(data,'base64'));
  };
  const waitFor=async expression=>{
   for(let i=0;i<120;i++){if(await evaluate(expression)) return; await new Promise(r=>setTimeout(r,100));}
@@ -48,6 +52,7 @@ try {
  };
  const search=async term=>{await evaluate(`(()=>{const s=document.getElementById('sidebarSearchInput');s.value=${JSON.stringify(term)};s.dispatchEvent(new Event('input'));})()`);};
  const visible=()=>evaluate(`Array.from(document.querySelectorAll('.sidebar-menu a')).filter(a=>a.getClientRects().length).map(a=>a.textContent.trim())`);
+ const setTheme=theme=>evaluate(`if(document.documentElement.dataset.theme!==${JSON.stringify(theme)})document.querySelector('#tema').click()`);
  await run('Chrome real, desktop e página sem Mermaid',async()=>{
   console.log(JSON.stringify(await cdp.send('Browser.getVersion')));
   await cdp.send('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
@@ -55,6 +60,47 @@ try {
   assert.deepEqual(external,[],'Página sem diagrama não deve consultar CDN');
   assert.equal(await evaluate("document.querySelectorAll('main h1').length"),1);
   await screenshot('desktop');
+ });
+ await run('Tema inicial segue sistema, escolha salva prevalece e não há seletor',async()=>{
+  for(const dark of [false,true]){
+   await evaluate("localStorage.removeItem('theme')");
+   await cdp.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:dark?'dark':'light'}]});
+   await go('/index.html?system='+dark);
+   assert.equal(await evaluate('document.documentElement.dataset.theme'),dark?'pangolim-dark':'pangolim');
+   assert.equal(await evaluate("localStorage.getItem('theme')"),null);
+   assert.equal(await evaluate("document.querySelector('#tema').tagName"),'BUTTON');
+   assert.equal(await evaluate("document.querySelectorAll('#tema select, select#tema, [role=menu]').length"),0);
+   await evaluate("document.querySelector('#tema').click()");
+   const chosen=dark?'pangolim':'pangolim-dark';
+   assert.equal(await evaluate('document.documentElement.dataset.theme'),chosen);
+   await go('/devops/git/guia-pratico.html');
+   assert.equal(await evaluate('document.documentElement.dataset.theme'),chosen);
+   await cdp.navigate(origin+baseurl+'/devops/git/guia-pratico.html');
+   await waitFor("document.querySelector('#sidebarCollapse').hasAttribute('aria-expanded')");
+   assert.equal(await evaluate('document.documentElement.dataset.theme'),chosen);
+  }
+  await go('/index.html');
+ });
+ await run('Botão alterna por clique, Enter e Espaço, com rótulo e foco acessíveis',async()=>{
+  await setTheme('pangolim');
+  await evaluate("document.querySelector('#tema').click()");
+  assert.equal(await evaluate('document.documentElement.dataset.theme'),'pangolim-dark');
+  assert.equal(await evaluate("document.querySelector('#tema').getAttribute('aria-label')"),'Ativar tema claro Pangolim');
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('.theme-icon-sun')).display"),'block');
+  await screenshot('desktop-dark');
+  await evaluate("document.querySelector('#tema').focus()");
+  assert.equal(await evaluate('document.activeElement.id'),'tema');
+  for(const [key,code,num,expected] of [['Enter','Enter',13,'pangolim'],[' ','Space',32,'pangolim-dark']]){
+   await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key,code,windowsVirtualKeyCode:num,text:key==='Enter'?'\r':' '});
+   await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode:num});
+   assert.equal(await evaluate('document.documentElement.dataset.theme'),expected);
+   assert.equal(await evaluate("document.activeElement.id"),'tema');
+   assert.equal(await evaluate("document.querySelector('#tema').title===document.querySelector('#tema').getAttribute('aria-label')"),true);
+  }
+  const {nodes}=await cdp.send('Accessibility.getFullAXTree');
+  assert.ok(nodes.some(n=>n.role?.value==='button'&&n.name?.value==='Ativar tema claro Pangolim'));
+  await setTheme('pangolim');
+  await screenshot('desktop-light');
  });
  await run('Buscas git → docker → semresultado123 → git, limpeza e restauração',async()=>{
   const initial=await evaluate("Array.from(document.querySelectorAll('.sidebar-menu details')).map(g=>g.open)");
@@ -74,7 +120,8 @@ try {
  });
  await run('Troca de tema preserva consulta, menu, documento e preferência',async()=>{
   await search('git');
-  await evaluate("window.testDocumentMarker=42;document.querySelector('#tema').value='pangolim-dark';document.querySelector('#tema').dispatchEvent(new Event('change'))");
+  await setTheme('pangolim');
+  await evaluate("window.testDocumentMarker=42;document.querySelector('#tema').click()");
   assert.equal(await evaluate('window.testDocumentMarker'),42);
   assert.equal(await evaluate("document.querySelector('#sidebarSearchInput').value"),'git');
   assert.equal(await evaluate("localStorage.getItem('theme')"),'pangolim-dark');
@@ -110,11 +157,12 @@ try {
    await evaluate("document.querySelector('main pre').scrollIntoView()");
    assert.equal(await evaluate("document.querySelector('main img[src*=\"collector.png\"]') === null"),true);
    for(const theme of ['pangolim','pangolim-dark']){
-    await evaluate(`document.documentElement.dataset.theme=${JSON.stringify(theme)}`);
+    await setTheme(theme);
+    assert.equal(await evaluate("document.querySelector('#tema').getClientRects().length>0"),true);
     const metrics=await evaluate("(()=>{const i=document.querySelector('main pre');return {page:document.documentElement.scrollWidth,viewport:innerWidth,code:i.getBoundingClientRect().width,main:document.querySelector('main').clientWidth};})()");
     assert.ok(metrics.page<=metrics.viewport+1,JSON.stringify({width,theme,...metrics}));
     assert.ok(metrics.code<=metrics.main);
-    if(width===375 && theme==='pangolim-dark')await screenshot('mobile-dark');
+    if(width===375)await screenshot(theme==='pangolim-dark'?'mobile-dark':'mobile-light');
    }
    await evaluate("document.querySelector('#sidebarCollapse').click()");
    await search('docker'); assert.ok((await visible()).length>0);
@@ -137,7 +185,7 @@ try {
  await run('Contraste dos textos secundários em todos os fundos dos dois temas',async()=>{
   const measured=[];
   for(const theme of ['pangolim','pangolim-dark']) {
-   await evaluate(`document.documentElement.dataset.theme=${JSON.stringify(theme)}`);
+   await setTheme(theme);
    const colors=await evaluate("(()=>{const css=getComputedStyle(document.documentElement);return Object.fromEntries(['--text-muted','--bg-page','--bg-main','--bg-card','--bg-sidebar','--bg-hover','--bg-code'].map(k=>[k,css.getPropertyValue(k).trim()]));})()");
    const luminance=hex=>{const rgb=hex.replace('#','').match(/.{2}/g).map(c=>parseInt(c,16)/255).map(c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);return rgb[0]*0.2126+rgb[1]*0.7152+rgb[2]*0.0722;};
    const fg=luminance(colors['--text-muted']);
@@ -147,7 +195,7 @@ try {
    }
   }
   console.log('CONTRAST '+JSON.stringify(measured));
-  fs.writeFileSync('.tmp/contrast-report.json',JSON.stringify(measured,null,2));
+  fs.writeFileSync(path.join(artifactDir,'contrast-report.json'),JSON.stringify(measured,null,2));
  });
  await run('Árvore de acessibilidade e skip link operável por teclado',async()=>{
   await go('/index.html?keyboard=1');
@@ -166,7 +214,8 @@ try {
    await go('/index.html?storage=blocked');
    await evaluate("if(document.body.classList.contains('sidebar-collapsed'))document.querySelector('#sidebarCollapse').click()");
    await search('git'); assert.ok((await visible()).length>0);
-   await evaluate("document.querySelector('#tema').value='pangolim-dark';document.querySelector('#tema').dispatchEvent(new Event('change'))");
+   await setTheme('pangolim');
+   await evaluate("document.querySelector('#tema').click()");
    assert.equal(await evaluate('document.documentElement.dataset.theme'),'pangolim-dark');
   } finally { await cdp.send('Page.removeScriptToEvaluateOnNewDocument',{identifier}); }
  });
@@ -194,8 +243,10 @@ try {
   mode='mock';
   await go('/programacao/cobol/index.html?mock=1');
   await waitFor("document.querySelector('.diagram-output svg') !== null");
+  await setTheme('pangolim');
+  await waitFor("window.diagramConfig.theme==='default'");
   const before=await evaluate('window.diagramSources.length');
-  await evaluate("document.querySelector('#tema').value='pangolim-dark';document.querySelector('#tema').dispatchEvent(new Event('change'))");
+  await evaluate("document.querySelector('#tema').click()");
   await waitFor(`window.diagramSources.length>${before}`);
   assert.equal(await evaluate('window.diagramConfig.theme'),'dark');
   assert.equal(await evaluate('window.diagramConfig.securityLevel'),'strict');

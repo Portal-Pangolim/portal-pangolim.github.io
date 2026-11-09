@@ -1,4 +1,7 @@
 import { filterMenu } from './search.mjs';
+import { initializeTheme } from './theme.mjs';
+
+initializeTheme();
 
 const menu = document.querySelector('.sidebar-menu');
 const search = document.getElementById('sidebarSearchInput');
@@ -104,15 +107,6 @@ for (const pre of document.querySelectorAll('main pre')) {
   pre.before(wrapper);
   wrapper.append(pre, button);
 }
-
-const theme = document.getElementById('tema');
-theme.value = document.documentElement.dataset.theme;
-theme.addEventListener('change', () => {
-  const value = theme.value === 'pangolim-dark' ? 'pangolim-dark' : 'pangolim';
-  document.documentElement.dataset.theme = value;
-  try { localStorage.setItem('theme', value); } catch { /* Preferência em memória continua funcionando. */ }
-  document.dispatchEvent(new Event('themechange'));
-});
 
 // Importação dinâmica não participa da inicialização dos controles locais.
 if (document.querySelector('code.language-mermaid')) {
