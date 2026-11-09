@@ -10,29 +10,23 @@
 /* ---------- Temas ---------- */
 
 /* =========================================================
-   Pangolim
-   Paleta de controle-financeiro/style.css, :root[data-tema="pangolim"].
-   Dourado para superfícies; marrom para texto e foco com contraste AA.
+   Pangolim claro — Branco e Dourado
+   Superfícies neutras, destaques dourados e texto contrastante.
    ========================================================= */
-
 [data-theme="pangolim"] {
   color-scheme: light;
 
-  /* =========================================================
-     Fundos gerais
-     ========================================================= */
-  --bg-page: #F2D98B;
-  --bg-sidebar: #F8E5AB;
-  --bg-main: #FFF1C6;
-  --bg-card: #FFF1C6;
-  --bg-hover: #F5D98F;
+  /* Fundos gerais */
+  --bg-page: #F8F9FA;
+  --bg-sidebar: #FFFFFF;
+  --bg-main: #F8F9FA;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F1F3F5;
 
-  /* =========================================================
-     Código e exemplos
-     ========================================================= */
-  --bg-code: #F8E5AB;
-  --bg-code-header: #F5D98F;
-  --bg-code-border: #D9BC73;
+  /* Código e exemplos */
+  --bg-code: #F3F4F6;
+  --bg-code-header: #E9ECEF;
+  --bg-code-border: #DDE1E5;
 
   --code-text: #79502C;
   --code-muted: #79552F;
@@ -46,38 +40,35 @@
   --syntax-variable: #79502C;
   --syntax-attribute: #3F6D6F;
 
-  /* =========================================================
-     Texto geral
-     ========================================================= */
-  --text: #79502C;
-  --text-strong: #35240F;
-  --text-muted: #79552F;
+  /* Texto geral */
+  --text: #333D48;
+  --text-strong: #202830;
+  --text-muted: #596572;
 
-  /* =========================================================
-     Bordas
-     ========================================================= */
-  --border: #D9BC73;
-  --border-soft: #D9BC73;
-  --border-control: #A17A39;
+  /* Bordas */
+  --border: #DCE0E4;
+  --border-soft: #E8EAED;
+  --border-control: #858E98;
 
-  /* =========================================================
-     Destaques
-     ========================================================= */
+  /* Destaques */
   --accent: #79502C;
-  --accent-hover: #35240F;
-  --accent-soft: #F5D98F;
+  --accent-hover: #59391F;
+  --accent-soft: #F5EDE0;
   --brand-gold: #C89A46;
   --brand-gold-hover: #BB8C39;
+
+  /* Mensagens de erro */
   --error-text: #A52E35;
   --error-bg: #FFE5DE;
   --error-border: #A52E35;
 
-  /* =========================================================
-     Sombra
-     ========================================================= */
-  --shadow: rgba(121, 80, 44, 0.08);
+  /* Sombra */
+  --shadow: rgba(30, 41, 59, 0.06);
 }
 
+/* =========================================================
+   Pangolim escuro — preservado
+   ========================================================= */
 [data-theme="pangolim-dark"] {
   color-scheme: dark;
   --bg-page:    #191919;
@@ -100,9 +91,9 @@
   --accent-soft:  rgba(191,191,191,.055);
   --brand-gold: transparent;
   --brand-gold-hover: var(--bg-hover);
-  --error-text: #ef938a;
-  --error-bg: rgba(220, 90, 80, 0.12);
-  --error-border: rgba(220, 90, 80, 0.35);
+  --error-text: #A52E35;
+  --error-bg: #FFE5DE;
+  --error-border: #A52E35;
 
   --shadow: rgba(0,0,0,.25);
 }
