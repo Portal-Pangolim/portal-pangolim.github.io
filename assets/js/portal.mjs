@@ -25,7 +25,11 @@ for (const link of menu.querySelectorAll('a')) {
     link.classList.add('active');
     link.setAttribute('aria-current', 'page');
     let parent = link.closest('details');
-    while (parent) { parent.open = true; parent = parent.parentElement.closest('details'); }
+    while (parent) {
+      parent.classList.add('has-current-page');
+      parent.open = true;
+      parent = parent.parentElement.closest('details');
+    }
   }
 }
 search.addEventListener('input', () => {

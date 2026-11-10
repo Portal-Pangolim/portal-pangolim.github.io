@@ -12,6 +12,7 @@ assert.ok(fs.existsSync(path.join(siteDir,'index.html')), 'Renderize primeiro: r
 const {server,origin} = await serve(siteDir,baseurl);
 let browser;
 const results=[];
+const touchTargetMeasurements=[];
 const run=async(name,fn)=>{ await fn(); results.push({name,passed:true}); console.log('PASS '+name); };
 try {
  browser=await launchBrowser();
@@ -32,7 +33,8 @@ try {
  const evaluate=expression=>cdp.evaluate(expression);
  const screenshot=async name=>{
   // Aguarda as transições para registrar o tema final, sem cores intermediárias.
-  await evaluate('Promise.all(document.getAnimations().map(animation=>animation.finished.catch(()=>{})))');
+  await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+  await waitFor("document.getAnimations().every(animation=>animation.playState!=='running')");
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png'});
   fs.writeFileSync(path.join(artifactDir,`${baseurl?'baseurl':'root'}-${name}.png`),Buffer.from(data,'base64'));
  };
@@ -53,6 +55,31 @@ try {
  const search=async term=>{await evaluate(`(()=>{const s=document.getElementById('sidebarSearchInput');s.value=${JSON.stringify(term)};s.dispatchEvent(new Event('input'));})()`);};
  const visible=()=>evaluate(`Array.from(document.querySelectorAll('.sidebar-menu a')).filter(a=>a.getClientRects().length).map(a=>a.textContent.trim())`);
  const setTheme=theme=>evaluate(`if(document.documentElement.dataset.theme!==${JSON.stringify(theme)})document.querySelector('#tema').click()`);
+ const checkMenuTargets=async()=>{
+  const measurement=await evaluate(`(()=>{
+   const selector=element=>{
+    const parts=[];
+    while(element.id!=='sidebarMenu') {
+     parts.unshift(element.localName+':nth-child('+([...element.parentElement.children].indexOf(element)+1)+')');
+     element=element.parentElement;
+    }
+    return '#sidebarMenu > '+parts.join(' > ');
+   };
+   return {
+    viewport:{width:innerWidth,height:innerHeight},theme:document.documentElement.dataset.theme,
+    pointerCoarse:matchMedia('(pointer: coarse)').matches,touchPoints:navigator.maxTouchPoints,
+    query:document.querySelector('#sidebarSearchInput').value,
+    targets:Array.from(document.querySelectorAll('.sidebar-menu summary, .sidebar-menu a'))
+     .filter(e=>e.getClientRects().length)
+     .map(e=>({selector:selector(e),text:e.textContent.trim().replace(/\\s+/g,' '),height:e.getBoundingClientRect().height,minHeight:getComputedStyle(e).minHeight}))
+   };
+  })()`);
+  touchTargetMeasurements.push(measurement);
+  assert.ok(measurement.targets.length>0,'A medição exige elementos visíveis no menu.');
+  const failures=measurement.targets.filter(target=>!(target.height>=44));
+  const {targets,...context}=measurement;
+  assert.equal(failures.length,0,'Áreas de interação abaixo de 44 px:\n'+JSON.stringify({...context,minimumHeight:44,failures},null,2));
+ };
  await run('Chrome real, desktop e página sem Mermaid',async()=>{
   console.log(JSON.stringify(await cdp.send('Browser.getVersion')));
   await cdp.send('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
@@ -102,6 +129,48 @@ try {
   await setTheme('pangolim');
   await screenshot('desktop-light');
  });
+ await run('Categorias com ícones decorativos e seleção da página e de seus ancestrais',async()=>{
+  const labels=['DevOps','Programação','Linux','Redes','Squid','Monitoramento','Nutanix','VMware','WatchGuard','Windows','Troubleshooting'];
+  assert.deepEqual(await evaluate("Array.from(document.querySelectorAll('.sidebar-menu > details > summary span')).map(e=>e.textContent.trim())"),labels);
+  assert.equal(await evaluate("document.querySelectorAll('.sidebar-menu > details > summary > svg[aria-hidden=true][focusable=false]').length"),11);
+  for(const page of ['/devops/git/guia-pratico.html','/linux/index.html','/nutanix/volumes/configurando-volumes-nutanix.html']) {
+   await go(page);
+   assert.equal(await evaluate("document.querySelectorAll('.sidebar-menu a[aria-current=page]').length"),1);
+   assert.equal(await evaluate("document.querySelectorAll('.sidebar-menu > details.has-current-page').length"),1);
+   assert.equal(await evaluate("Array.from(document.querySelectorAll('.sidebar-menu .has-current-page')).every(e=>e.open && e.querySelector('a[aria-current=page]'))"),true);
+  }
+  await go('/devops/git/guia-pratico.html');
+  await evaluate("document.querySelector('.sidebar-menu > details.has-current-page > summary').focus()");
+  for(const key of ['Enter',' ']) {
+   const open=await evaluate("document.querySelector('.sidebar-menu > details.has-current-page').open");
+   const code=key==='Enter'?'Enter':'Space', num=key==='Enter'?13:32;
+   await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key,code,windowsVirtualKeyCode:num,text:key==='Enter'?'\r':' '});
+   await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode:num});
+   assert.equal(await evaluate("document.querySelector('.sidebar-menu > details.has-current-page').open"),!open);
+  }
+  await evaluate('document.activeElement.blur()');
+  for(const theme of ['pangolim','pangolim-dark']) {
+   await setTheme(theme);
+   await evaluate('Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))');
+   const selected=await evaluate("(()=>{const category=document.querySelector('.sidebar-menu > details.has-current-page > summary');const page=document.querySelector('.sidebar-menu a[aria-current=page]');return [category,page].map(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,weight:Number(s.fontWeight),border:s.borderLeftWidth};});})()");
+   assert.ok(selected.every(s=>s.background!=='rgba(0, 0, 0, 0)' && s.weight>=600 && parseFloat(s.border)>=2),JSON.stringify({theme,selected}));
+   await screenshot(theme==='pangolim'?'sidebar-selected-light':'sidebar-selected-dark');
+  }
+  await go('/index.html');
+  assert.equal(await evaluate("document.querySelectorAll('.sidebar-menu .has-current-page, .sidebar-menu [aria-current]').length"),0);
+ });
+ await run('Cabeçalho compacto, foco da pesquisa e botões do rodapé alinhados',async()=>{
+  const metrics=await evaluate("(()=>{const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,height:r.height,center:r.top+r.height/2};};return {header:rect('.sidebar-top'),brand:rect('.brand'),search:rect('.sidebar-search'),collapse:rect('#sidebarCollapse'),github:rect('.sidebar-footer a'),theme:rect('#tema')};})()");
+  assert.equal(metrics.header.height,62);
+  assert.ok(Math.abs(metrics.brand.center-metrics.search.center)<=1);
+  assert.ok(Math.abs(metrics.collapse.center-metrics.search.center)<=1);
+  assert.equal(metrics.github.height,metrics.theme.height);
+  assert.equal(metrics.github.top,metrics.theme.top);
+  await evaluate("document.querySelector('#sidebarSearchInput').focus()");
+  assert.equal(await evaluate("getComputedStyle(document.activeElement).outlineStyle"),'solid');
+  assert.equal(await evaluate("document.querySelector('.sidebar-search kbd') === null"),true);
+  await evaluate('document.activeElement.blur()');
+ });
  await run('Buscas git → docker → semresultado123 → git, limpeza e restauração',async()=>{
   const initial=await evaluate("Array.from(document.querySelectorAll('.sidebar-menu details')).map(g=>g.open)");
   await search('git'); const first=await visible(); assert.ok(first.some(s=>/git|branch|clone/i.test(s)));
@@ -149,44 +218,75 @@ try {
   await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
   assert.equal(await evaluate("document.querySelector('#dockTooltip').hidden"),true);
  });
- await run('Exemplo textual WatchGuard e reflow em 320, 375 e 768 pixels nos dois temas',async()=>{
-  for(const width of [320,375,768]){
-   await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:true});
-   await go('/watchguard/watchguardndrcollectionagent.html');
-   await waitFor("document.querySelector('.sidebar').getBoundingClientRect().width <= 55");
-   await evaluate("document.querySelector('main pre').scrollIntoView()");
-   assert.equal(await evaluate("document.querySelector('main img[src*=\"collector.png\"]') === null"),true);
-   for(const theme of ['pangolim','pangolim-dark']){
-    await setTheme(theme);
-    assert.equal(await evaluate("document.querySelector('#tema').getClientRects().length>0"),true);
-    const metrics=await evaluate("(()=>{const i=document.querySelector('main pre');return {page:document.documentElement.scrollWidth,viewport:innerWidth,code:i.getBoundingClientRect().width,main:document.querySelector('main').clientWidth};})()");
-    assert.ok(metrics.page<=metrics.viewport+1,JSON.stringify({width,theme,...metrics}));
-    assert.ok(metrics.code<=metrics.main);
-    if(width===375)await screenshot(theme==='pangolim-dark'?'mobile-dark':'mobile-light');
+ await run('Desktop com ponteiro fino preserva categorias e submenus compactos nos dois temas',async()=>{
+  await go('/devops/git/guia-pratico.html');
+  for(const theme of ['pangolim','pangolim-dark']) {
+   await setTheme(theme);
+   const sizes=await evaluate("(()=>{const group=document.querySelector('.sidebar-menu > details');return {viewport:innerWidth,pointerCoarse:matchMedia('(pointer: coarse)').matches,heights:[group.querySelector(':scope > summary'),group.querySelector('li > details > summary'),group.querySelector('a')].map(e=>e.getBoundingClientRect().height)};})()");
+   assert.equal(sizes.pointerCoarse,false);
+   assert.deepEqual(sizes.heights,[36,34,34],JSON.stringify({theme,...sizes}));
+  }
+ });
+ await run('Exemplo textual WatchGuard e reflow em 320, 375 e 768 pixels nos dois temas, com e sem toque',async()=>{
+  for(const touch of [true,false]) {
+   await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:touch,maxTouchPoints:1});
+   for(const width of [320,375,768]){
+    await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:true});
+    await go('/watchguard/watchguardndrcollectionagent.html');
+    await waitFor("document.querySelector('.sidebar').getBoundingClientRect().width <= 55");
+    await evaluate("document.querySelector('main pre').scrollIntoView()");
+    assert.equal(await evaluate("document.querySelector('main img[src*=\"collector.png\"]') === null"),true);
+    for(const theme of ['pangolim','pangolim-dark']){
+     await setTheme(theme);
+     assert.equal(await evaluate("document.querySelector('#tema').getClientRects().length>0"),true);
+     const metrics=await evaluate("(()=>{const i=document.querySelector('main pre');return {page:document.documentElement.scrollWidth,viewport:innerWidth,code:i.getBoundingClientRect().width,main:document.querySelector('main').clientWidth};})()");
+     assert.ok(metrics.page<=metrics.viewport+1,JSON.stringify({width,theme,...metrics}));
+     assert.ok(metrics.code<=metrics.main);
+     if(touch && width===375)await screenshot(theme==='pangolim-dark'?'mobile-dark':'mobile-light');
+    }
+    await evaluate("document.querySelector('#sidebarCollapse').click()");
+    await search('docker'); assert.ok((await visible()).length>0);
+    for(const query of ['docker','']) {
+     await search(query);
+     for(const theme of ['pangolim','pangolim-dark']) {
+      await setTheme(theme);
+      await checkMenuTargets();
+      if(touch && width===375 && !query)await screenshot(theme==='pangolim'?'mobile-sidebar-light':'mobile-sidebar-dark');
+     }
+    }
+    await evaluate("document.querySelector('#sidebarCollapse').click()");
+    assert.deepEqual(await visible(),[]);
    }
-   await evaluate("document.querySelector('#sidebarCollapse').click()");
-   await search('docker'); assert.ok((await visible()).length>0);
-   await evaluate("document.querySelector('#sidebarCollapse').click()");
-   assert.deepEqual(await visible(),[]);
   }
  });
  await run('Ampliação de 200% e preferência de movimento reduzido',async()=>{
+  await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:false});
   await cdp.send('Emulation.setDeviceMetricsOverride',{width:640,height:450,deviceScaleFactor:2,mobile:false});
   await cdp.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   await go('/index.html');
   assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth+1'));
   assert.equal(await evaluate("getComputedStyle(document.querySelector('.page-shell')).transitionDuration"),'0s');
+  await evaluate("document.querySelector('#sidebarCollapse').click()");
+  for(const theme of ['pangolim','pangolim-dark']) {
+   await setTheme(theme);
+   assert.equal(await evaluate("(()=>{const sidebar=document.querySelector('.sidebar').getBoundingClientRect();const footer=document.querySelector('.sidebar-footer').getBoundingClientRect();const menu=document.querySelector('.sidebar-menu');return sidebar.right<=innerWidth && footer.bottom<=innerHeight && menu.clientHeight>0 && menu.scrollWidth<=menu.clientWidth;})()"),true);
+   await evaluate("document.querySelector('.sidebar-menu > details:last-child > summary').focus()");
+   assert.equal(await evaluate("(()=>{const focused=document.activeElement.getBoundingClientRect();const menu=document.querySelector('.sidebar-menu').getBoundingClientRect();return focused.top>=menu.top && focused.bottom<=menu.bottom;})()"),true);
+   await screenshot(theme==='pangolim'?'zoom-200-light':'zoom-200-dark');
+  }
+  await evaluate("document.querySelector('#sidebarCollapse').click()");
  });
  await run('Indicadores de submenus respeitam o filho direto',async()=>{
   await evaluate("document.querySelector('#sidebarCollapse').click();const p=document.querySelector('.sidebar-menu details');p.open=true;p.querySelector('details').open=false");
-  const state=await evaluate("(()=>{const p=document.querySelector('.sidebar-menu details');return [getComputedStyle(p.querySelector(':scope > summary'),'::after').content,getComputedStyle(p.querySelector('details').querySelector(':scope > summary'),'::after').content];})()");
+  await evaluate('Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))');
+  const state=await evaluate("(()=>{const p=document.querySelector('.sidebar-menu details');return [getComputedStyle(p.querySelector(':scope > summary'),'::after').transform,getComputedStyle(p.querySelector('details').querySelector(':scope > summary'),'::after').transform];})()");
   assert.notEqual(state[0],state[1]);
  });
  await run('Contraste dos textos secundários em todos os fundos dos dois temas',async()=>{
   const measured=[];
   for(const theme of ['pangolim','pangolim-dark']) {
    await setTheme(theme);
-   const colors=await evaluate("(()=>{const css=getComputedStyle(document.documentElement);return Object.fromEntries(['--text-muted','--bg-page','--bg-main','--bg-card','--bg-sidebar','--bg-hover','--bg-code'].map(k=>[k,css.getPropertyValue(k).trim()]));})()");
+   const colors=await evaluate("(()=>{const css=getComputedStyle(document.documentElement);return Object.fromEntries(['--text-muted','--bg-page','--bg-main','--bg-card','--bg-sidebar','--bg-hover','--bg-code','--sidebar-selected-bg'].map(k=>[k,css.getPropertyValue(k).trim()]));})()");
    const luminance=hex=>{const rgb=hex.replace('#','').match(/.{2}/g).map(c=>parseInt(c,16)/255).map(c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);return rgb[0]*0.2126+rgb[1]*0.7152+rgb[2]*0.0722;};
    const fg=luminance(colors['--text-muted']);
    for(const [name,color] of Object.entries(colors).filter(([k])=>k!=='--text-muted')) {
@@ -306,6 +406,7 @@ try {
 } finally {
  fs.mkdirSync('.tmp',{recursive:true});
  fs.writeFileSync(argument('--report')||process.env.BROWSER_REPORT||'.tmp/browser-report.json',JSON.stringify(results,null,2));
+ fs.writeFileSync(path.join(artifactDir,'touch-target-report.json'),JSON.stringify(touchTargetMeasurements,null,2));
  if(browser) await browser.close();
  await new Promise(resolve=>server.close(resolve));
 }
