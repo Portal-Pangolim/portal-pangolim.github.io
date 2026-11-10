@@ -12,6 +12,7 @@ assert.ok(fs.existsSync(path.join(siteDir,'index.html')), 'Renderize primeiro: r
 const {server,origin} = await serve(siteDir,baseurl);
 let browser;
 const results=[];
+const touchTargetMeasurements=[];
 const run=async(name,fn)=>{ await fn(); results.push({name,passed:true}); console.log('PASS '+name); };
 try {
  browser=await launchBrowser();
@@ -54,6 +55,31 @@ try {
  const search=async term=>{await evaluate(`(()=>{const s=document.getElementById('sidebarSearchInput');s.value=${JSON.stringify(term)};s.dispatchEvent(new Event('input'));})()`);};
  const visible=()=>evaluate(`Array.from(document.querySelectorAll('.sidebar-menu a')).filter(a=>a.getClientRects().length).map(a=>a.textContent.trim())`);
  const setTheme=theme=>evaluate(`if(document.documentElement.dataset.theme!==${JSON.stringify(theme)})document.querySelector('#tema').click()`);
+ const checkMenuTargets=async()=>{
+  const measurement=await evaluate(`(()=>{
+   const selector=element=>{
+    const parts=[];
+    while(element.id!=='sidebarMenu') {
+     parts.unshift(element.localName+':nth-child('+([...element.parentElement.children].indexOf(element)+1)+')');
+     element=element.parentElement;
+    }
+    return '#sidebarMenu > '+parts.join(' > ');
+   };
+   return {
+    viewport:{width:innerWidth,height:innerHeight},theme:document.documentElement.dataset.theme,
+    pointerCoarse:matchMedia('(pointer: coarse)').matches,touchPoints:navigator.maxTouchPoints,
+    query:document.querySelector('#sidebarSearchInput').value,
+    targets:Array.from(document.querySelectorAll('.sidebar-menu summary, .sidebar-menu a'))
+     .filter(e=>e.getClientRects().length)
+     .map(e=>({selector:selector(e),text:e.textContent.trim().replace(/\\s+/g,' '),height:e.getBoundingClientRect().height,minHeight:getComputedStyle(e).minHeight}))
+   };
+  })()`);
+  touchTargetMeasurements.push(measurement);
+  assert.ok(measurement.targets.length>0,'A medição exige elementos visíveis no menu.');
+  const failures=measurement.targets.filter(target=>!(target.height>=44));
+  const {targets,...context}=measurement;
+  assert.equal(failures.length,0,'Áreas de interação abaixo de 44 px:\n'+JSON.stringify({...context,minimumHeight:44,failures},null,2));
+ };
  await run('Chrome real, desktop e página sem Mermaid',async()=>{
   console.log(JSON.stringify(await cdp.send('Browser.getVersion')));
   await cdp.send('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
@@ -192,34 +218,45 @@ try {
   await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
   assert.equal(await evaluate("document.querySelector('#dockTooltip').hidden"),true);
  });
- await run('Exemplo textual WatchGuard e reflow em 320, 375 e 768 pixels nos dois temas',async()=>{
-  await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
-  for(const width of [320,375,768]){
-   await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:true});
-   await go('/watchguard/watchguardndrcollectionagent.html');
-   await waitFor("document.querySelector('.sidebar').getBoundingClientRect().width <= 55");
-   await evaluate("document.querySelector('main pre').scrollIntoView()");
-   assert.equal(await evaluate("document.querySelector('main img[src*=\"collector.png\"]') === null"),true);
-   for(const theme of ['pangolim','pangolim-dark']){
-    await setTheme(theme);
-    assert.equal(await evaluate("document.querySelector('#tema').getClientRects().length>0"),true);
-    const metrics=await evaluate("(()=>{const i=document.querySelector('main pre');return {page:document.documentElement.scrollWidth,viewport:innerWidth,code:i.getBoundingClientRect().width,main:document.querySelector('main').clientWidth};})()");
-    assert.ok(metrics.page<=metrics.viewport+1,JSON.stringify({width,theme,...metrics}));
-    assert.ok(metrics.code<=metrics.main);
-    if(width===375)await screenshot(theme==='pangolim-dark'?'mobile-dark':'mobile-light');
-   }
-   await evaluate("document.querySelector('#sidebarCollapse').click()");
-   await search('docker'); assert.ok((await visible()).length>0);
-   assert.equal(await evaluate("Array.from(document.querySelectorAll('.sidebar-menu summary, .sidebar-menu a')).filter(e=>e.getClientRects().length).every(e=>e.getBoundingClientRect().height>=44)"),true);
-   if(width===375) {
-    await search('');
-    for(const theme of ['pangolim','pangolim-dark']) {
+ await run('Desktop com ponteiro fino preserva categorias e submenus compactos nos dois temas',async()=>{
+  await go('/devops/git/guia-pratico.html');
+  for(const theme of ['pangolim','pangolim-dark']) {
+   await setTheme(theme);
+   const sizes=await evaluate("(()=>{const group=document.querySelector('.sidebar-menu > details');return {viewport:innerWidth,pointerCoarse:matchMedia('(pointer: coarse)').matches,heights:[group.querySelector(':scope > summary'),group.querySelector('li > details > summary'),group.querySelector('a')].map(e=>e.getBoundingClientRect().height)};})()");
+   assert.equal(sizes.pointerCoarse,false);
+   assert.deepEqual(sizes.heights,[36,34,34],JSON.stringify({theme,...sizes}));
+  }
+ });
+ await run('Exemplo textual WatchGuard e reflow em 320, 375 e 768 pixels nos dois temas, com e sem toque',async()=>{
+  for(const touch of [true,false]) {
+   await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:touch,maxTouchPoints:1});
+   for(const width of [320,375,768]){
+    await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:true});
+    await go('/watchguard/watchguardndrcollectionagent.html');
+    await waitFor("document.querySelector('.sidebar').getBoundingClientRect().width <= 55");
+    await evaluate("document.querySelector('main pre').scrollIntoView()");
+    assert.equal(await evaluate("document.querySelector('main img[src*=\"collector.png\"]') === null"),true);
+    for(const theme of ['pangolim','pangolim-dark']){
      await setTheme(theme);
-     await screenshot(theme==='pangolim'?'mobile-sidebar-light':'mobile-sidebar-dark');
+     assert.equal(await evaluate("document.querySelector('#tema').getClientRects().length>0"),true);
+     const metrics=await evaluate("(()=>{const i=document.querySelector('main pre');return {page:document.documentElement.scrollWidth,viewport:innerWidth,code:i.getBoundingClientRect().width,main:document.querySelector('main').clientWidth};})()");
+     assert.ok(metrics.page<=metrics.viewport+1,JSON.stringify({width,theme,...metrics}));
+     assert.ok(metrics.code<=metrics.main);
+     if(touch && width===375)await screenshot(theme==='pangolim-dark'?'mobile-dark':'mobile-light');
     }
+    await evaluate("document.querySelector('#sidebarCollapse').click()");
+    await search('docker'); assert.ok((await visible()).length>0);
+    for(const query of ['docker','']) {
+     await search(query);
+     for(const theme of ['pangolim','pangolim-dark']) {
+      await setTheme(theme);
+      await checkMenuTargets();
+      if(touch && width===375 && !query)await screenshot(theme==='pangolim'?'mobile-sidebar-light':'mobile-sidebar-dark');
+     }
+    }
+    await evaluate("document.querySelector('#sidebarCollapse').click()");
+    assert.deepEqual(await visible(),[]);
    }
-   await evaluate("document.querySelector('#sidebarCollapse').click()");
-   assert.deepEqual(await visible(),[]);
   }
  });
  await run('Ampliação de 200% e preferência de movimento reduzido',async()=>{
@@ -369,6 +406,7 @@ try {
 } finally {
  fs.mkdirSync('.tmp',{recursive:true});
  fs.writeFileSync(argument('--report')||process.env.BROWSER_REPORT||'.tmp/browser-report.json',JSON.stringify(results,null,2));
+ fs.writeFileSync(path.join(artifactDir,'touch-target-report.json'),JSON.stringify(touchTargetMeasurements,null,2));
  if(browser) await browser.close();
  await new Promise(resolve=>server.close(resolve));
 }

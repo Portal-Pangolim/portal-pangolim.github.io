@@ -984,8 +984,10 @@ pre::-webkit-scrollbar-thumb:hover {
   height: 15px;
 }
 
-@media (pointer: coarse) {
+/* Mantém alvos móveis mesmo com ponteiro fino; iguala a especificidade dos submenus. */
+@media (max-width: 900px), (pointer: coarse) {
   .sidebar-menu details summary,
+  .sidebar-menu li > details > summary,
   .sidebar-menu details li a { min-height: 44px; }
 }
 
