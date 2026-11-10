@@ -360,6 +360,36 @@ try {
   await evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw Error('negado')}}});document.querySelector('.copy-btn').click()");
   await waitFor("document.querySelector('.copy-btn').classList.contains('copy-error')");
  });
+ await run('HSC MailInspector: navegação, pendências, tabelas, código e reflow nos dois temas',async()=>{
+  mode='blocked';
+  await go('/monitoramento/index.html');
+  assert.equal(await evaluate("document.querySelectorAll('main a[href$=\"/monitoramento/zabbix/hsc-mailinspector.html\"]').length"),1);
+  const page='/monitoramento/zabbix/hsc-mailinspector.html';
+  for(const width of [1280,320,375,768]) {
+   await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<900});
+   await go(page+'?viewport='+width);
+   await waitFor("document.querySelector('figcaption')?.textContent.includes('indisponível')");
+   const article=await evaluate("(()=>{const main=document.querySelector('main');const current=document.querySelector('.sidebar-menu a[aria-current=page]');const ancestors=[];for(let group=current.closest('details');group;group=group.parentElement.closest('details'))ancestors.push({name:group.querySelector(':scope > summary span').textContent,open:group.open});return {headings:main.querySelectorAll('h1').length,tables:main.querySelectorAll('table').length,bash:main.querySelectorAll('.language-bash pre code, pre code.language-bash').length,ini:main.querySelectorAll('.language-ini pre code, pre code.language-ini').length,mermaid:main.querySelectorAll('code.language-mermaid').length,pending:main.textContent.includes('cadastro e homologação no Zabbix Web pendentes'),ancestors};})()");
+   assert.deepEqual(article,{headings:1,tables:8,bash:5,ini:1,mermaid:1,pending:true,ancestors:[{name:'Zabbix',open:true},{name:'Monitoramento',open:true}]});
+   for(const theme of ['pangolim','pangolim-dark']) {
+    await setTheme(theme);
+    const metrics=await evaluate("(()=>{const main=document.querySelector('main');return {viewport:innerWidth,page:document.documentElement.scrollWidth,main:main.clientWidth,blocks:Array.from(main.querySelectorAll('table, pre')).map(e=>({tag:e.tagName,width:e.getBoundingClientRect().width}))};})()");
+    assert.ok(metrics.page<=metrics.viewport+1,JSON.stringify({width,theme,...metrics}));
+    assert.ok(metrics.blocks.every(block=>block.width<=metrics.main+1),JSON.stringify({width,theme,...metrics}));
+    if(width===1280||width===375)await screenshot('mailinspector-'+width+'-'+theme);
+   }
+   if(width===375) {
+    await evaluate("document.querySelector('#sidebarCollapse').click()");
+    await search('MailInspector');
+    assert.ok((await visible()).includes('HSC MailInspector'));
+    await search('');
+   }
+  }
+  const fragment=await evaluate("Array.from(document.querySelectorAll('main h2')).find(h=>h.textContent.includes('Resultado da validação')).id");
+  await go(page+'?viewport=768#'+encodeURIComponent(fragment));
+  assert.equal(await evaluate('decodeURIComponent(location.hash.slice(1))'),fragment);
+  assert.ok(await evaluate(`document.getElementById(${JSON.stringify(fragment)}) !== null`));
+ });
  await run('Navegação e fragmentos preservados no DOM real',async()=>{
   for(const [page,id] of [['/devops/git/guia-pratico.html','sumário'],['/nutanix/volumes/configurando-volumes-nutanix.html','introducao'],['/nutanix/volumes/questionario-volumes-nutanix.html','gabarito-rapido']]) {
    await go(page+'#'+encodeURIComponent(id));
@@ -380,7 +410,7 @@ try {
  });
  await run('Sem exceções JavaScript locais',async()=>assert.deepEqual(exceptions,[]));
  if(process.argv.includes('--live-mermaid')) {
-  await run('Biblioteca Mermaid real: todos os 23 blocos nos dois temas',async()=>{
+  await run('Biblioteca Mermaid real: todos os blocos nos dois temas',async()=>{
    mode='live'; let rendered=0;
    const pages=[];
    const walk=dir=>{for(const item of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,item.name);if(item.isDirectory())walk(p);else if(p.endsWith('.html') && fs.readFileSync(p,'utf8').includes('language-mermaid'))pages.push(p);}};
