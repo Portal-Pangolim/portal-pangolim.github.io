@@ -2023,3 +2023,16 @@ body.sidebar-collapsed .sidebar-collapse { position: static; flex-shrink: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Botão de tema mais suave no modo claro */
+[data-theme="pangolim"] .theme-switch {
+  background: #E8D7B8;
+  border-color: #C8B594;
+  color: #70553A;
+}
+
+[data-theme="pangolim"] .theme-switch:hover {
+  background: #DFCAA7;
+  border-color: #BDA681;
+  color: #60472F;
+}
