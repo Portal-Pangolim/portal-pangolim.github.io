@@ -44,6 +44,11 @@ Comece pela coleta de métricas com o Zabbix e depois explore a visualização n
     <span class="wiki-topic-description">Instalação e configuração inicial do Zabbix Agent no Windows.</span>
   </a>
 
+  <a class="wiki-topic" href="{{ 'monitoramento/zabbix/hsc-mailinspector.html' | relative_url }}">
+    <span class="wiki-topic-title">HSC MailInspector</span>
+    <span class="wiki-topic-description">Monitoramento com Zabbix Agent 2; cadastro dos itens e homologação no Zabbix Web pendentes.</span>
+  </a>
+
 </div>
 
 ### Visualização
