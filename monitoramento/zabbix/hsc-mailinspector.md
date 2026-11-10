@@ -27,6 +27,7 @@ Documentação relacionada: [Instalação do Zabbix Agent no Linux]({{ 'monitora
 Documentar o monitoramento das filas de mensagens, conexões SMTP e limites operacionais do HSC MailInspector por meio do Zabbix Agent 2. Este procedimento abrange a configuração dos itens no Zabbix Web e a validação da solução já implantada nos servidores Linux.
 
 ## 2. Ambiente
+
 | Equipamento | Host | IP | Porta do agente |
 |---|---|---|---|
 | MailInspector — Unidade A | `mailinspector-a.exemplo.invalid` | `192.0.2.10` | TCP `10052` |
@@ -58,6 +59,7 @@ flowchart TD
 O coletor consulta os dados periodicamente e publica valores numéricos no cache. O Zabbix Agent 2 apenas lê esse cache quando recebe uma consulta, evitando executar operações Docker e SQL a cada requisição do servidor Zabbix.
 
 ## 4. Métricas disponíveis
+
 | Chave | Descrição | Origem |
 |---|---|---|
 | `mli.qtotal` | Total de mensagens na fila | `mailqueue.sh total` |
@@ -82,6 +84,7 @@ O coletor consulta os dados periodicamente e publica valores numéricos no cache
 
 ### 5.2. Configurar a interface do agente
 Na configuração de cada host, conferir a seção **Interfaces** e adicionar, se necessário, uma interface do tipo **Agent**:
+
 | Campo | Unidade A | Unidade B |
 |---|---|---|
 | Type | `Agent` | `Agent` |
@@ -99,6 +102,7 @@ Na configuração de cada host, conferir a seção **Interfaces** e adicionar, s
 3. Preencher os campos abaixo.
 
 4. Salvar o item.
+
 | Campo | Configuração |
 |---|---|
 | Name | `MailInspector - Total de mensagens na fila` |
@@ -114,6 +118,7 @@ Na configuração de cada host, conferir a seção **Interfaces** e adicionar, s
 
 ### 5.4. Criar os demais itens
 Repetir o procedimento para as sete chaves, em **ambos os hosts**:
+
 | Nome do item | Key |
 |---|---|
 | MailInspector - Total de mensagens na fila | `mli.qtotal` |
@@ -193,6 +198,7 @@ echo "Idade do cache: $(( $(date +%s) - LAST )) segundos"
 O leitor rejeita cache expirado (mais de 180 segundos), inválido ou ausente.
 
 ## 8. Arquivos da implantação
+
 | Caminho | Função |
 |---|---|
 | `/usr/local/sbin/zabbix-mailinspector-collect` | Coleta as sete métricas |
@@ -218,6 +224,7 @@ UserParameter=mli.quotalimit,/usr/local/bin/zabbix-mailinspector-read quotalimit
 O coletor executa o script `mailqueue.sh` do container HSC e consultas SQL **somente de leitura**. Não é necessário alterar o script original do fabricante.
 
 ## 9. Solução de problemas
+
 | Sintoma | Verificações recomendadas |
 |---|---|
 | `Connection refused` | Agente ativo, endereço e porta `10052` |
@@ -256,6 +263,7 @@ Alertas possíveis, **ainda não implantados**:
 Definir limites e severidades com a equipe responsável, com base no comportamento normal do ambiente. Evitar limiares arbitrários.
 
 ## 11. Resultado da validação técnica — 10/11/2026
+
 | Verificação | Unidade A | Unidade B |
 |---|---|---|
 | Coletor instalado e testado | Aprovado | Aprovado |
