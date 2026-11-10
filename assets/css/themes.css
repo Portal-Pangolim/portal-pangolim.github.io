@@ -45,6 +45,9 @@
   --brand-gold: #C89A46;
   --brand-gold-hover: #CBA253;
 
+  --sidebar-selected-bg: var(--accent-soft);
+  --sidebar-selected-border: var(--accent);
+
   /* Erros */
   --error-text: #8E3A34;
   --error-bg: #F8E6DE;
@@ -91,6 +94,9 @@
   --accent-soft:  rgba(191,191,191,.055);
   --brand-gold: transparent;
   --brand-gold-hover: var(--bg-hover);
+
+  --sidebar-selected-bg: #30291F;
+  --sidebar-selected-border: #B99A71;
   --error-text: #A52E35;
   --error-bg: #FFE5DE;
   --error-border: #A52E35;
